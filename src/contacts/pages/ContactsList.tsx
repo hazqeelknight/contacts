@@ -33,6 +33,7 @@ import {
   FileDownload,
   MergeType,
   Visibility,
+  Person,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +46,8 @@ import {
   useMergeContacts,
   useContactGroups,
   useCreateContact,
+  useUpdateContact,
+  useImportContacts,
 } from '../api';
 import { ContactForm } from '../components/ContactForm';
 import { ContactImportModal } from '../components/ContactImportModal';
@@ -59,17 +62,21 @@ const ContactsList: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
   const [selectedContacts, setSelectedContacts] = React.useState<string[]>([]);
   const [contactFormOpen, setContactFormOpen] = React.useState(false);
+  const [editingContact, setEditingContact] = React.useState<Contact | null>(null);
   const [importModalOpen, setImportModalOpen] = React.useState(false);
+  const [importTaskId, setImportTaskId] = React.useState<string | null>(null);
   const [mergeModalOpen, setMergeModalOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [contactToDelete, setContactToDelete] = React.useState<Contact | null>(null);
 
-  const { data: contactsData, isLoading } = useContacts(filters);
+  const { data: contactsData, isLoading } = useContacts(filters, page, rowsPerPage);
   const { data: groupsData } = useContactGroups();
   const deleteContactMutation = useDeleteContact();
   const exportContactsMutation = useExportContacts();
   const mergeContactsMutation = useMergeContacts();
   const createContactMutation = useCreateContact();
+  const updateContactMutation = useUpdateContact();
+  const importContactsMutation = useImportContacts();
 
   const contacts = contactsData?.results || [];
   const groups = groupsData?.results || [];
@@ -96,6 +103,11 @@ const ContactsList: React.FC = () => {
     }
   };
 
+  const handleEditContact = (contact: Contact) => {
+    setEditingContact(contact);
+    setContactFormOpen(true);
+  };
+
   const handleDeleteContact = (contact: Contact) => {
     setContactToDelete(contact);
     setDeleteDialogOpen(true);
@@ -119,6 +131,48 @@ const ContactsList: React.FC = () => {
   const handleMerge = () => {
     if (selectedContacts.length < 2) return;
     setMergeModalOpen(true);
+  };
+
+  const handleContactFormSubmit = (data: Partial<Contact>) => {
+    if (editingContact) {
+      updateContactMutation.mutate(
+        { id: editingContact.id, data },
+        {
+          onSuccess: () => {
+            setContactFormOpen(false);
+            setEditingContact(null);
+          },
+        }
+      );
+    } else {
+      createContactMutation.mutate(data, {
+        onSuccess: () => {
+          setContactFormOpen(false);
+        },
+      });
+    }
+  };
+
+  const handleContactFormClose = () => {
+    setContactFormOpen(false);
+    setEditingContact(null);
+  };
+
+  const handleImportSubmit = (data: { csv_file: File; skip_duplicates: boolean; update_existing: boolean }) => {
+    importContactsMutation.mutate(data, {
+      onSuccess: (response) => {
+        setImportTaskId(response.task_id);
+      },
+    });
+  };
+
+  const handleMergeSubmit = (data: { primary_contact_id: string; duplicate_contact_ids: string[] }) => {
+    mergeContactsMutation.mutate(data, {
+      onSuccess: () => {
+        setMergeModalOpen(false);
+        setSelectedContacts([]);
+      },
+    });
   };
 
   const selectedContactObjects = contacts.filter(c => selectedContacts.includes(c.id));
@@ -271,7 +325,7 @@ const ContactsList: React.FC = () => {
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={2}>
                       <Avatar sx={{ width: 32, height: 32 }}>
-                        {(contact.first_name || '').charAt(0)}
+                        {contact.first_name ? contact.first_name.charAt(0) : <Person />}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2" fontWeight={600}>
@@ -372,9 +426,7 @@ const ContactsList: React.FC = () => {
                       <Tooltip title="Edit">
                         <IconButton
                           size="small"
-                          onClick={() => {
-                            // TODO: Implement edit functionality
-                          }}
+                          onClick={() => handleEditContact(contact)}
                         >
                           <Edit />
                         </IconButton>
@@ -412,25 +464,19 @@ const ContactsList: React.FC = () => {
       {/* Contact Form Modal */}
       <ContactForm
         open={contactFormOpen}
-        onClose={() => setContactFormOpen(false)}
-        onSubmit={(data) => {
-          createContactMutation.mutate(data, {
-            onSuccess: () => {
-              setContactFormOpen(false);
-            },
-          });
-        }}
-        loading={createContactMutation.isPending}
+        onClose={handleContactFormClose}
+        onSubmit={handleContactFormSubmit}
+        loading={createContactMutation.isPending || updateContactMutation.isPending}
+        initialData={editingContact}
       />
 
       {/* Import Modal */}
       <ContactImportModal
         open={importModalOpen}
         onClose={() => setImportModalOpen(false)}
-        onSubmit={() => {
-          // TODO: Implement import
-          setImportModalOpen(false);
-        }}
+        onSubmit={handleImportSubmit}
+        loading={importContactsMutation.isPending}
+        taskId={importTaskId}
       />
 
       {/* Merge Modal */}
@@ -438,14 +484,7 @@ const ContactsList: React.FC = () => {
         open={mergeModalOpen}
         onClose={() => setMergeModalOpen(false)}
         contacts={selectedContactObjects}
-        onSubmit={(data) => {
-          mergeContactsMutation.mutate(data, {
-            onSuccess: () => {
-              setMergeModalOpen(false);
-              setSelectedContacts([]);
-            },
-          });
-        }}
+        onSubmit={handleMergeSubmit}
         loading={mergeContactsMutation.isPending}
       />
 

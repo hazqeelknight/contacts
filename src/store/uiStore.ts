@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
 
 interface UIState {
@@ -54,7 +55,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   addNotification: (notification) => {
     const newNotification = {
       ...notification,
-      id: Date.now().toString(),
+      id: uuidv4(),
       timestamp: new Date().toISOString(),
       read: false,
     };

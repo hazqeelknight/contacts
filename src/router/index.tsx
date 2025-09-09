@@ -74,7 +74,7 @@ export const router = createBrowserRouter([
   {
     path: '/change-password',
     element: (
-      <React.Suspense fallback={<div>Loading...</div>}>
+      <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
         <ChangePassword />
       </React.Suspense>
     ),
@@ -92,7 +92,7 @@ export const router = createBrowserRouter([
   {
     path: '/p/:organizerSlug',
     element: (
-      <React.Suspense fallback={<div>Loading...</div>}>
+      <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
         <PublicProfile />
       </React.Suspense>
     ),
@@ -104,7 +104,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             <Dashboard />
           </React.Suspense>
         </Layout>
@@ -132,7 +132,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             {React.createElement(usersRoutes)}
           </React.Suspense>
         </Layout>
@@ -144,7 +144,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             {React.createElement(eventsRoutes)}
           </React.Suspense>
         </Layout>
@@ -156,7 +156,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             {React.createElement(availabilityRoutes)}
           </React.Suspense>
         </Layout>
@@ -168,7 +168,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             {React.createElement(integrationsRoutes)}
           </React.Suspense>
         </Layout>
@@ -180,7 +180,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             {React.createElement(notificationsRoutes)}
           </React.Suspense>
         </Layout>
@@ -192,7 +192,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             {React.createElement(contactsRoutes)}
           </React.Suspense>
         </Layout>
@@ -204,7 +204,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Layout>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<LoadingSpinner fullScreen message="Loading page..." />}>
             {React.createElement(workflowsRoutes)}
           </React.Suspense>
         </Layout>

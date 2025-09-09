@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
+import { useAuthStore } from '@/store/authStore';
 
 // Create axios instance with base configuration
 const apiClient: AxiosInstance = axios.create({
@@ -34,8 +35,8 @@ apiClient.interceptors.response.use(
     
     if (response?.status === 401) {
       // Unauthorized - clear token and redirect to login
-      localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      useAuthStore.getState().logout();
+      window.location.assign('/login');
       return Promise.reject(error);
     }
     

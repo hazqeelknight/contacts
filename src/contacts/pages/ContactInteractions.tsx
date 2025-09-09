@@ -39,14 +39,10 @@ const ContactInteractions: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
   const [typeFilter, setTypeFilter] = React.useState('');
 
-  const { data: interactionsData, isLoading } = useContactInteractions();
+  const { data: interactionsData, isLoading } = useContactInteractions(undefined, page, rowsPerPage, { interaction_type: typeFilter });
   const interactions = interactionsData?.results || [];
   const totalInteractions = interactionsData?.count || 0;
 
-  // Filter interactions by type
-  const filteredInteractions = typeFilter
-    ? interactions.filter(interaction => interaction.interaction_type === typeFilter)
-    : interactions;
 
   if (isLoading) {
     return <LoadingSpinner message="Loading interactions..." />;
@@ -67,7 +63,10 @@ const ContactInteractions: React.FC = () => {
             size="small"
             label="Interaction Type"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              setPage(0);
+            }}
             sx={{ minWidth: 200 }}
           >
             {INTERACTION_TYPE_OPTIONS.map((option) => (
@@ -78,7 +77,7 @@ const ContactInteractions: React.FC = () => {
           </TextField>
           
           <Typography variant="body2" color="text.secondary">
-            {filteredInteractions.length} interaction{filteredInteractions.length !== 1 ? 's' : ''}
+            {totalInteractions} interaction{totalInteractions !== 1 ? 's' : ''}
           </Typography>
         </Box>
       </Paper>
@@ -97,9 +96,7 @@ const ContactInteractions: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredInteractions
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((interaction, index) => (
+              {interactions.map((interaction, index) => (
                 <motion.tr
                   key={interaction.id}
                   component={TableRow}
@@ -109,8 +106,9 @@ const ContactInteractions: React.FC = () => {
                   hover
                   sx={{ cursor: 'pointer' }}
                   onClick={() => {
-                    // Navigate to contact detail if we had contact ID
-                    // For now, we only have contact_name from the serializer
+                    if (interaction.contact_id) {
+                      navigate(`/contacts/detail/${interaction.contact_id}`);
+                    }
                   }}
                 >
                   <TableCell>
@@ -178,7 +176,7 @@ const ContactInteractions: React.FC = () => {
         
         <TablePagination
           component="div"
-          count={filteredInteractions.length}
+          count={totalInteractions}
           page={page}
           onPageChange={(_, newPage) => setPage(newPage)}
           rowsPerPage={rowsPerPage}
@@ -190,7 +188,7 @@ const ContactInteractions: React.FC = () => {
         />
       </Paper>
 
-      {filteredInteractions.length === 0 && (
+      {interactions.length === 0 && !isLoading && (
         <Box
           display="flex"
           flexDirection="column"

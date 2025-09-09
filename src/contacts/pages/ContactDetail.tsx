@@ -40,7 +40,10 @@ import {
   useContactGroups,
   useAddContactToGroup,
   useRemoveContactFromGroup,
+  useAddContactInteraction,
+  useUpdateContact,
 } from '../api';
+import { ContactForm } from '../components/ContactForm';
 import { AddInteractionModal } from '../components/AddInteractionModal';
 import { formatDate, formatRelativeTime } from '@/utils/formatters';
 
@@ -48,12 +51,15 @@ const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [interactionModalOpen, setInteractionModalOpen] = React.useState(false);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [groupMenuAnchor, setGroupMenuAnchor] = React.useState<null | HTMLElement>(null);
 
   const { data: contact, isLoading: contactLoading } = useContact(id!);
   const { data: interactionsData, isLoading: interactionsLoading } = useContactInteractions(id);
   const { data: groupsData } = useContactGroups();
   const deleteContactMutation = useDeleteContact();
+  const updateContactMutation = useUpdateContact();
+  const addInteractionMutation = useAddContactInteraction();
   const addToGroupMutation = useAddContactToGroup();
   const removeFromGroupMutation = useRemoveContactFromGroup();
 
@@ -71,6 +77,32 @@ const ContactDetail: React.FC = () => {
           navigate('/contacts/list');
         },
       });
+    }
+  };
+
+  const handleEdit = (data: Partial<Contact>) => {
+    if (contact) {
+      updateContactMutation.mutate(
+        { id: contact.id, data },
+        {
+          onSuccess: () => {
+            setEditModalOpen(false);
+          },
+        }
+      );
+    }
+  };
+
+  const handleAddInteraction = (data: { interaction_type: string; description: string; metadata?: Record<string, any> }) => {
+    if (contact) {
+      addInteractionMutation.mutate(
+        { contactId: contact.id, data },
+        {
+          onSuccess: () => {
+            setInteractionModalOpen(false);
+          },
+        }
+      );
     }
   };
 
@@ -116,9 +148,7 @@ const ContactDetail: React.FC = () => {
             <Button
               variant="outlined"
               startIcon={<Edit />}
-              onClick={() => {
-                // TODO: Implement edit functionality
-              }}
+              onClick={() => setEditModalOpen(true)}
             >
               Edit
             </Button>
@@ -427,10 +457,17 @@ const ContactDetail: React.FC = () => {
         open={interactionModalOpen}
         onClose={() => setInteractionModalOpen(false)}
         contactName={contact.full_name}
-        onSubmit={() => {
-          // TODO: Implement add interaction
-          setInteractionModalOpen(false);
-        }}
+        onSubmit={handleAddInteraction}
+        loading={addInteractionMutation.isPending}
+      />
+
+      {/* Edit Contact Modal */}
+      <ContactForm
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSubmit={handleEdit}
+        loading={updateContactMutation.isPending}
+        initialData={contact}
       />
     </>
   );
