@@ -17,7 +17,7 @@ class Contact(models.Model):
     
     # Additional information
     notes = models.TextField(blank=True)
-    tags = models.JSONField(default=list, blank=True, help_text="List of tags for categorization")
+    tags = models.JSONField(default=lambda: [], blank=True, help_text="List of tags for categorization")
     
     # Tracking
     total_bookings = models.IntegerField(default=0)
@@ -96,7 +96,7 @@ class ContactInteraction(models.Model):
     booking = models.ForeignKey('events.Booking', on_delete=models.SET_NULL, null=True, blank=True)
     
     # Additional data
-    metadata = models.JSONField(default=dict, blank=True)
+    metadata = models.JSONField(default=lambda: {}, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     

@@ -67,12 +67,13 @@ class ContactGroupCreateSerializer(serializers.ModelSerializer):
 class ContactInteractionSerializer(serializers.ModelSerializer):
     interaction_type_display = serializers.CharField(source='get_interaction_type_display', read_only=True)
     contact_name = serializers.CharField(source='contact.full_name', read_only=True)
+    contact_id = serializers.UUIDField(source='contact.id', read_only=True)
     booking_id = serializers.UUIDField(source='booking.id', read_only=True)
     
     class Meta:
         model = ContactInteraction
         fields = [
-            'id', 'contact_name', 'interaction_type', 'interaction_type_display',
+            'id', 'contact_name', 'contact_id', 'interaction_type', 'interaction_type_display',
             'description', 'booking_id', 'metadata', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
