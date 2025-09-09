@@ -24,6 +24,8 @@ import {
   ExpandMore,
   ChevronLeft,
   ChevronRight,
+  People,
+  Group,
 } from '@mui/icons-material';
 
 import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
@@ -96,6 +98,10 @@ const navigationItems: NavigationItem[] = [
     label: 'Contacts',
     path: '/contacts',
     icon: Contacts,
+    children: [
+      { id: 'contacts-list', label: 'Contacts List', path: '/contacts/list', icon: People },
+      { id: 'contact-groups', label: 'Contact Groups', path: '/contacts/groups', icon: Group },
+    ],
   },
   {
     id: 'workflows',

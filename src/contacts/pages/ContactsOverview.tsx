@@ -81,7 +81,7 @@ const ContactsOverview: React.FC = () => {
               startIcon={<PersonAdd />}
               onClick={() => navigate('/contacts/list')}
             >
-              Add Contact
+              Manage Contacts
             </Button>
           </Box>
         }
