@@ -255,6 +255,7 @@ const ContactGroupDetail: React.FC = () => {
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText
+                          disableTypography
                           primary={
                             <Box display="flex" alignItems="center" gap={1}>
                               <Typography variant="subtitle2" fontWeight={600}>
