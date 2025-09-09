@@ -1,26 +1,20 @@
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Count
-from celery.result import AsyncResult
 from .models import Contact, ContactGroup, ContactInteraction
 from .serializers import (
     ContactSerializer, ContactCreateSerializer, ContactGroupSerializer,
     ContactGroupCreateSerializer, ContactInteractionSerializer,
     ContactStatsSerializer, ContactImportSerializer
 )
-from .permissions import (
-    CanViewContacts, CanManageContacts, CanViewContactGroups, 
-    CanManageContactGroups, CanViewContactInteractions, CanAddContactInteractions
-)
 
 
 class ContactListCreateView(generics.ListCreateAPIView):
-    permission_classes = [CanViewContacts, CanManageContacts]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         queryset = Contact.objects.filter(organizer=self.request.user)
@@ -41,7 +35,6 @@ class ContactListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(groups__id=group_id)
         
         # Filter by tags
-        # Note: This uses PostgreSQL-specific JSONField __contains lookup
         tags = self.request.query_params.get('tags')
         if tags:
             tag_list = [tag.strip() for tag in tags.split(',')]
@@ -65,7 +58,7 @@ class ContactListCreateView(generics.ListCreateAPIView):
 
 
 class ContactDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [CanViewContacts, CanManageContacts]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = ContactSerializer
     
     def get_queryset(self):
@@ -73,10 +66,10 @@ class ContactDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ContactGroupListCreateView(generics.ListCreateAPIView):
-    permission_classes = [CanViewContactGroups, CanManageContactGroups]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        return ContactGroup.objects.filter(organizer=self.request.user).prefetch_related('contacts')
+        return ContactGroup.objects.filter(organizer=self.request.user)
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -88,15 +81,15 @@ class ContactGroupListCreateView(generics.ListCreateAPIView):
 
 
 class ContactGroupDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [CanViewContactGroups, CanManageContactGroups]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = ContactGroupSerializer
     
     def get_queryset(self):
-        return ContactGroup.objects.filter(organizer=self.request.user).prefetch_related('contacts')
+        return ContactGroup.objects.filter(organizer=self.request.user)
 
 
 class ContactInteractionListView(generics.ListAPIView):
-    permission_classes = [CanViewContactInteractions]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = ContactInteractionSerializer
     
     def get_queryset(self):
@@ -105,35 +98,12 @@ class ContactInteractionListView(generics.ListAPIView):
             return ContactInteraction.objects.filter(
                 contact_id=contact_id,
                 organizer=self.request.user
-            ).select_related('contact', 'booking')
-        return ContactInteraction.objects.filter(
-            organizer=self.request.user
-        ).select_related('contact', 'booking')
-
-
-class TaskStatusView(APIView):
-    """View to check the status of Celery tasks."""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get(self, request, task_id):
-        try:
-            result = AsyncResult(task_id)
-            response_data = {
-                'task_id': task_id,
-                'status': result.status,
-                'result': result.result if result.successful() else None,
-                'error': str(result.result) if result.failed() else None,
-            }
-            return Response(response_data)
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get task status: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        return ContactInteraction.objects.filter(organizer=self.request.user)
 
 
 @api_view(['GET'])
-@permission_classes([CanViewContacts])
+@permission_classes([permissions.IsAuthenticated])
 def contact_stats(request):
     """Get contact statistics."""
     contacts = Contact.objects.filter(organizer=request.user)
@@ -179,7 +149,7 @@ def contact_stats(request):
 
 
 @api_view(['POST'])
-@permission_classes([CanManageContacts, CanManageContactGroups])
+@permission_classes([permissions.IsAuthenticated])
 def add_contact_to_group(request, contact_id, group_id):
     """Add a contact to a group."""
     contact = get_object_or_404(Contact, id=contact_id, organizer=request.user)
@@ -191,7 +161,7 @@ def add_contact_to_group(request, contact_id, group_id):
 
 
 @api_view(['POST'])
-@permission_classes([CanManageContacts, CanManageContactGroups])
+@permission_classes([permissions.IsAuthenticated])
 def remove_contact_from_group(request, contact_id, group_id):
     """Remove a contact from a group."""
     contact = get_object_or_404(Contact, id=contact_id, organizer=request.user)
@@ -203,7 +173,7 @@ def remove_contact_from_group(request, contact_id, group_id):
 
 
 @api_view(['POST'])
-@permission_classes([CanAddContactInteractions])
+@permission_classes([permissions.IsAuthenticated])
 def add_contact_interaction(request, contact_id):
     """Add an interaction to a contact."""
     contact = get_object_or_404(Contact, id=contact_id, organizer=request.user)
@@ -225,7 +195,7 @@ def add_contact_interaction(request, contact_id):
 
 
 @api_view(['POST'])
-@permission_classes([CanManageContacts])
+@permission_classes([permissions.IsAuthenticated])
 def import_contacts(request):
     """Import contacts from CSV file."""
     serializer = ContactImportSerializer(data=request.data)
@@ -253,7 +223,7 @@ def import_contacts(request):
 
 
 @api_view(['GET'])
-@permission_classes([CanViewContacts])
+@permission_classes([permissions.IsAuthenticated])
 def export_contacts(request):
     """Export contacts to CSV."""
     from django.http import HttpResponse
@@ -288,7 +258,7 @@ def export_contacts(request):
 
 
 @api_view(['POST'])
-@permission_classes([CanManageContacts])
+@permission_classes([permissions.IsAuthenticated])
 def merge_contacts(request):
     """Merge duplicate contacts."""
     primary_contact_id = request.data.get('primary_contact_id')
@@ -309,12 +279,9 @@ def merge_contacts(request):
         
         # Merge contact data
         from .tasks import merge_contact_data
-        task = merge_contact_data.delay(primary_contact.id, list(duplicate_contacts.values_list('id', flat=True)))
+        merge_contact_data.delay(primary_contact.id, list(duplicate_contacts.values_list('id', flat=True)))
         
-        return Response({
-            'message': 'Contact merge initiated',
-            'task_id': task.id
-        })
+        return Response({'message': 'Contact merge initiated'})
     
     except Contact.DoesNotExist:
         return Response(

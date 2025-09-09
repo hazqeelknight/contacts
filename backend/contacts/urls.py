@@ -28,7 +28,4 @@ urlpatterns = [
     
     # All Interactions
     path('interactions/', views.ContactInteractionListView.as_view(), name='all-interactions'),
-    
-    # Task Status
-    path('tasks/<uuid:task_id>/status/', views.TaskStatusView.as_view(), name='task-status'),
 ]
