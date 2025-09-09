@@ -99,7 +99,6 @@ const navigationItems: NavigationItem[] = [
     path: '/contacts',
     icon: Contacts,
     children: [
-      { id: 'contacts-overview', label: 'Overview', path: '/contacts', icon: Dashboard },
       { id: 'contacts-list', label: 'Contacts List', path: '/contacts/list', icon: People },
       { id: 'contact-groups', label: 'Contact Groups', path: '/contacts/groups', icon: Group },
     ],

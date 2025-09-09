@@ -271,7 +271,7 @@ const ContactsList: React.FC = () => {
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={2}>
                       <Avatar sx={{ width: 32, height: 32 }}>
-                        {contact.first_name.charAt(0)}
+                        {(contact.first_name || '').charAt(0)}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2" fontWeight={600}>

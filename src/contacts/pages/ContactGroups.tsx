@@ -222,7 +222,7 @@ const ContactGroups: React.FC = () => {
                         <AvatarGroup max={4} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.75rem' } }}>
                           {group.contacts.slice(0, 4).map((contact) => (
                             <Avatar key={contact.id}>
-                              {contact.first_name.charAt(0)}
+                              {(contact.first_name || '').charAt(0)}
                             </Avatar>
                           ))}
                         </AvatarGroup>
