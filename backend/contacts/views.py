@@ -1,6 +1,8 @@
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from django.utils import timezone
+from datetime import timedelta
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Count
 from .models import Contact, ContactGroup, ContactInteraction
@@ -128,9 +130,6 @@ def contact_stats(request):
     stats['top_companies'] = top_companies
     
     # Booking frequency
-    from django.utils import timezone
-    from datetime import timedelta
-    
     booking_frequency = {
         'this_month': contacts.filter(
             last_booking_date__gte=timezone.now() - timedelta(days=30)
